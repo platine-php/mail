@@ -1,0 +1,67 @@
+{
+    "name": "platine-php/mail",
+    "description": "Platine Mail provides a flexible and powerful PHP email sender with support of SMTP, Native Mail, sendmail, etc transport.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["application", "mail", "framework", "php", "platine", "email", "transport", "smtp"],
+    "authors": [
+        {
+            "name": "NGUEREZA Tony",
+            "email": "nguerezatony@gmail.com",
+            "homepage": "http://www.iacademy.cf",
+            "role": "developer"
+        }
+    ],
+
+    "support": {
+        "issues": "https://github.com/platine-php/mail/issues",
+        "source": "https://github.com/platine-php/mail"
+    },
+	
+    "require": {
+        "php": "^7.4 || ^8"
+    },
+	
+    "require-dev": {
+        "mikey179/vfsstream": "~1.6",
+        "phpmd/phpmd": "@stable",
+        "phpstan/phpstan": "0.12.x-dev",
+        "phpunit/phpunit": "^9.5",
+        "platine-php/test-tools": "1.0.x-dev",
+        "squizlabs/php_codesniffer": "3.*"
+    },
+    
+    "autoload": {
+        "psr-4":{
+            "Platine\\Mail\\": "src/"
+        }
+    },
+    
+    "autoload-dev": {
+        "psr-4":{
+            "Platine\\Test\\": "tests"
+        },
+        "files": ["tests/fixtures/mocks.php"]
+    },
+    
+    "config": {
+        "sort-packages": true
+    },
+    
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "1.0.x-dev"
+        }
+    },
+
+    "scripts": {
+        "test": "phpunit --colors=always",
+        "static": "phpstan analyze",
+        "check": "phpcs",
+        "check-fix": "phpcbf",
+        "analyze": "phpmd src xml phpmd.xml"
+    },
+	
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
