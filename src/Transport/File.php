@@ -8,8 +8,8 @@
  *
  * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2015, Sonia Marquette
  * Copyright (c) 2020 Platine Mail
+ * Copyright (c) 2015, Sonia Marquette
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,6 +48,7 @@ declare(strict_types=1);
 
 namespace Platine\Mail\Transport;
 
+use Platine\Mail\Exception\FileTransportException;
 use Platine\Mail\MessageInterface;
 
 /**
@@ -58,10 +59,42 @@ class File implements TransportInterface
 {
 
     /**
+     *
+     * @var string
+     */
+    protected string $path;
+
+    /**
+     * Create new instance
+     * @param string $path
+     */
+    public function __construct(string $path)
+    {
+        $this->path = rtrim($path, '/\\') . DIRECTORY_SEPARATOR;
+    }
+
+    /**
      * {@inheritedoc}
      */
     public function send(MessageInterface $message): bool
     {
+        if (!is_dir($this->path) || !is_writable($this->path)) {
+            throw new FileTransportException(sprintf(
+                'The message destination directory [%s] does '
+                    . 'not exist or is not writeable',
+                $this->path
+            ));
+        }
+
+        $content = (string)$message;
+        $file = $this->path . date('YmdHis') . '-' . md5(uniqid()) . '.txt';
+        if (!file_put_contents($file, $content)) {
+            throw new FileTransportException(sprintf(
+                'Could not write message to file [%s]',
+                $file
+            ));
+        }
+
         return true;
     }
 }

@@ -8,8 +8,8 @@
 [![License](https://poser.pugx.org/platine-php/mail/license)](https://packagist.org/packages/platine-php/mail)
 [![Build Status](https://img.shields.io/travis/platine-php/mail/develop.svg?style=flat-square)](https://travis-ci.com/platine-php/mail)  
 [![Quality Score](https://img.shields.io/scrutinizer/g/platine-php/mail.svg?style=flat-square)](https://scrutinizer-ci.com/g/platine-php/mail)
-[![Maintainability](https://api.codeclimate.com/v1/badges/5722b474126d86d58e57/maintainability)](https://codeclimate.com/github/platine-php/mail/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/5722b474126d86d58e57/test_coverage)](https://codeclimate.com/github/platine-php/mail/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/ce0d37e3a904cf61a3ad/maintainability)](https://codeclimate.com/github/platine-php/mail/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/ce0d37e3a904cf61a3ad/test_coverage)](https://codeclimate.com/github/platine-php/mail/test_coverage)
 
 ### Requirements 
 - **PHP >= 7.4**, **PHP 8** 
