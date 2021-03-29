@@ -126,15 +126,57 @@ class SMTP implements TransportInterface
     protected array $responses = [];
 
     /**
+     * Connection timeout
+     * @var int
+     */
+    protected int $timeout = 30;
+
+    /**
+     * Server response timeout
+     * @var int
+     */
+    protected int $responseTimeout = 10;
+
+    /**
      * Create new instance
      * @param string $host
      * @param int $port
      */
-    public function __construct(string $host, int $port = 25)
-    {
+    public function __construct(
+        string $host,
+        int $port = 25,
+        int $timeout = 30,
+        int $responseTimeout = 10
+    ) {
         $this->host = $host;
         $this->port = $port;
+        $this->timeout = $timeout;
+        $this->responseTimeout = $responseTimeout;
     }
+
+    /**
+     *
+     * @param int $timeout
+     * @return $this
+     */
+    public function setTimeout(int $timeout): self
+    {
+        $this->timeout = $timeout;
+
+        return $this;
+    }
+
+    /**
+     *
+     * @param int $responseTimeout
+     * @return $this
+     */
+    public function setResponseTimeout(int $responseTimeout): self
+    {
+        $this->responseTimeout = $responseTimeout;
+        return $this;
+    }
+
 
     /**
      * Set TLS connection
@@ -229,10 +271,21 @@ class SMTP implements TransportInterface
     protected function connect(): self
     {
         $host = $this->ssl ? 'ssl://' . $this->host : $this->host;
-        $this->smtp = @fsockopen($host, $this->port);
+        $this->smtp = @fsockopen(
+            $host,
+            $this->port,
+            $errorNumber,
+            $errorMessage,
+            $this->timeout
+        );
 
         if (!is_resource($this->smtp)) {
-            throw new SMTPException('Could not establish SMTP connection to server');
+            throw new SMTPException(sprintf(
+                'Could not establish SMTP connection to server [%s] error: [%s: %s]',
+                $host,
+                $errorNumber,
+                $errorMessage
+            ));
         }
 
         $code = $this->getCode();
@@ -410,27 +463,6 @@ class SMTP implements TransportInterface
     }
 
     /**
-     * Get return code from server
-     * @return int
-     * @throws SMTPException
-     */
-    protected function getCode(): int
-    {
-        if (is_resource($this->smtp)) {
-            while ($str = fgets($this->smtp, 515)) {
-                $this->responses[] = $str;
-
-                if (substr($str, 3, 1) === ' ') {
-                    $code = substr($str, 0, 3);
-                    return (int) $code;
-                }
-            }
-        }
-
-        throw new SMTPException('SMTP Server did not respond with anything I recognized');
-    }
-
-    /**
      * Send command to server
      * @param string $command
      * @return int
@@ -442,5 +474,27 @@ class SMTP implements TransportInterface
             fputs($this->smtp, $command, strlen($command));
         }
         return $this->getCode();
+    }
+
+    /**
+     * Get return code from server
+     * @return int
+     * @throws SMTPException
+     */
+    protected function getCode(): int
+    {
+        if (is_resource($this->smtp)) {
+            stream_set_timeout($this->smtp, $this->responseTimeout);
+            while ($str = fgets($this->smtp, 515)) {
+                $this->responses[] = $str;
+
+                if (substr($str, 3, 1) === ' ') {
+                    $code = substr($str, 0, 3);
+                    return (int) $code;
+                }
+            }
+        }
+
+        throw new SMTPException('SMTP Server did not respond with anything I recognized');
     }
 }
