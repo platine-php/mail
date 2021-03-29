@@ -58,6 +58,11 @@ class Message implements MessageInterface
 {
 
     /**
+     * End of line char
+     */
+    public const CRLF = PHP_EOL;
+
+    /**
      *
      * @var string
      */
@@ -121,7 +126,7 @@ class Message implements MessageInterface
      * Maximum characters for each message line
      * @var int
      */
-    protected int $wrap = 78;
+    protected int $wrap = 70;
 
     /**
      * Set mail priority
@@ -152,7 +157,7 @@ class Message implements MessageInterface
         $this->attachments = [];
         $this->headers = [];
         $this->uid = md5(uniqid((string)time()));
-        $this->wrap = 78;
+        $this->wrap = 70;
         $this->priority = 3;
 
         return $this;
@@ -241,8 +246,7 @@ class Message implements MessageInterface
     {
         $body = wordwrap($this->body, $this->wrap);
         if ($this->hasAttachments()) {
-            $this->setAttachmentHeaders();
-            $body = $this->getAttachmentBody();
+            $body = $this->getBodyWithAttachments();
         }
 
         return $body;
@@ -251,12 +255,13 @@ class Message implements MessageInterface
     /**
      * {@inheritedoc}
      */
-    public function getFormattedHeaders(): string
+    public function getEncodedHeaders(): string
     {
         $this->prepareHeaders();
+
         $content = '';
         foreach ($this->headers as $name => $value) {
-            $content .= $name . ': ' . $value . PHP_EOL;
+            $content .= $name . ': ' . $value . self::CRLF;
         }
 
         return $content;
@@ -321,6 +326,14 @@ class Message implements MessageInterface
     /**
      * {@inheritedoc}
      */
+    public function getEncodedTo(): string
+    {
+        return join(', ', $this->to);
+    }
+
+    /**
+     * {@inheritedoc}
+     */
     public function getTo(): array
     {
         return $this->to;
@@ -329,10 +342,10 @@ class Message implements MessageInterface
     /**
      * {@inheritedoc}
      */
-    public function setWrap(int $wrap = 78): self
+    public function setWrap(int $wrap = 70): self
     {
         if ($wrap < 1) {
-            $wrap = 78;
+            $wrap = 70;
         }
 
         $this->wrap = $wrap;
@@ -369,7 +382,7 @@ class Message implements MessageInterface
     /**
      * {@inheritedoc}
      */
-    public function addGenericHeader(string $name, $value): self
+    public function addHeader(string $name, $value): self
     {
         $this->headers[$name] = $value;
 
@@ -404,7 +417,7 @@ class Message implements MessageInterface
             $addresses[] = $this->formatHeader($email, $name);
         }
 
-        $this->addGenericHeader($header, implode(', ', $addresses));
+        $this->addHeader($header, implode(', ', $addresses));
 
         return $this;
     }
@@ -422,9 +435,7 @@ class Message implements MessageInterface
      */
     public function setHtml(): self
     {
-        $this->addGenericHeader('Content-Type', 'text/html; charset="utf-8"');
-
-        return $this;
+        return $this->addHeader('Content-Type', 'text/html; charset="UTF-8"');
     }
 
     /**
@@ -433,13 +444,11 @@ class Message implements MessageInterface
     public function __toString(): string
     {
         $this->prepareHeaders();
-        $content = $this->getFormattedHeaders();
+        $content = $this->getEncodedHeaders();
         $content .= $this->getEncodedBody();
-        $content .= PHP_EOL;
 
         return $content;
     }
-
 
     /**
      * Prepare mail headers
@@ -447,27 +456,23 @@ class Message implements MessageInterface
      */
     protected function prepareHeaders(): self
     {
-        $this->headers['Date'] = date('r');
         if (!array_key_exists('Return-Path', $this->headers)) {
-            $this->headers['Return-Path'] = $this->from;
+            $this->addHeader('Return-Path', $this->from);
         }
 
-        $this->headers['X-Priority'] = $this->priority;
-        $this->headers['X-Mailer'] = 'Platine PHP Mail';
-        $this->headers['Subject'] = $this->subject;
-        $this->headers['To'] = join(', ', $this->to);
+        $this->addHeader('X-Priority', $this->priority)
+               ->addHeader('X-Mailer', 'Platine PHP Mail')
+               ->addHeader('Subject', $this->subject)
+               ->addHeader('To', join(', ', $this->to))
+               ->addHeader('Date', date('r'));
 
-        return $this;
-    }
-
-    /**
-     * Set mail attachments headers
-     * @return $this
-     */
-    protected function setAttachmentHeaders(): self
-    {
-        $this->headers['MIME-Version'] = '1.0';
-        $this->headers['Content-Type'] = sprintf('multipart/mixed; boundary="%s"', $this->uid);
+        if ($this->hasAttachments()) {
+            $this->addHeader('MIME-Version', '1.0')
+               ->addHeader(
+                   'Content-Type',
+                   sprintf('multipart/mixed; boundary="%s"', $this->uid)
+               );
+        }
 
         return $this;
     }
@@ -499,26 +504,26 @@ class Message implements MessageInterface
     }
 
     /**
-     * Return the attachment body
+     * Return the attachment with body
      * @return string
      */
-    protected function getAttachmentBody(): string
+    protected function getBodyWithAttachments(): string
     {
         $body = [];
         $body[] = 'This is a multi-part message in MIME format.';
         $body[] = sprintf('--%s', $this->uid);
         $body[] = 'Content-Type: text/html; charset="UTF-8"';
         $body[] = 'Content-Transfer-Encoding: base64';
-        $body[] = PHP_EOL;
+        $body[] = self::CRLF;
         $body[] = chunk_split(base64_encode($this->body));
-        $body[] = PHP_EOL;
+        $body[] = self::CRLF;
         $body[] = sprintf('--%s', $this->uid);
 
         foreach ($this->attachments as $attachment) {
             $body[] = $this->getAttachmentMimeTemplate($attachment);
         }
 
-        return implode(PHP_EOL, $body) . '--';
+        return implode(self::CRLF, $body) . '--';
     }
 
     /**
@@ -540,7 +545,7 @@ class Message implements MessageInterface
         $head[] = '';
         $head[] = sprintf('--%s', $this->uid);
 
-        return implode(PHP_EOL, $head);
+        return implode(self::CRLF, $head);
     }
 
     /**

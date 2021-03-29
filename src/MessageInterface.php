@@ -93,6 +93,12 @@ interface MessageInterface
     public function getTo(): array;
 
     /**
+     * Return the encoded receivers ready to send
+     * @return string
+     */
+    public function getEncodedTo(): string;
+
+    /**
      * Set copy recipients
      * @param array<int|string, string> $pairs
      * @return self
@@ -208,7 +214,7 @@ interface MessageInterface
      * @param mixed $value
      * @return self
      */
-    public function addGenericHeader(string $name, $value): self;
+    public function addHeader(string $name, $value): self;
 
     /**
      * Add mail headers
@@ -228,5 +234,5 @@ interface MessageInterface
      * Return the headers ready for sent
      * @return string
      */
-    public function getFormattedHeaders(): string;
+    public function getEncodedHeaders(): string;
 }

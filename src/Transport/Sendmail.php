@@ -93,7 +93,7 @@ class Sendmail implements TransportInterface
             );
         }
 
-        fputs($fp, $message->getFormattedHeaders());
+        fputs($fp, $message->getEncodedHeaders());
         fputs($fp, $content);
 
         $status = pclose($fp);

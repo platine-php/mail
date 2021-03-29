@@ -48,6 +48,9 @@ declare(strict_types=1);
 
 namespace Platine\Mail;
 
+use Platine\Mail\Transport\NullTransport;
+use Platine\Mail\Transport\TransportInterface;
+
 /**
  * Class Mailer
  * @package Platine\Mail
@@ -55,5 +58,49 @@ namespace Platine\Mail;
 class Mailer
 {
 
+    /**
+     * The mail transport instance
+     * @var TransportInterface
+     */
+    protected TransportInterface $transport;
 
+    /**
+     * Create new instance
+     * @param TransportInterface|null $transport
+     */
+    public function __construct(?TransportInterface $transport = null)
+    {
+        $this->transport = $transport ? $transport : new NullTransport();
+    }
+
+    /**
+     * Get the transport instance
+     * @return TransportInterface
+     */
+    public function getTransport(): TransportInterface
+    {
+        return $this->transport;
+    }
+
+    /**
+     * Set the transport instance
+     * @param TransportInterface $transport
+     * @return $this
+     */
+    public function setTransport(TransportInterface $transport): self
+    {
+        $this->transport = $transport;
+
+        return $this;
+    }
+
+    /**
+     * Send the message
+     * @param MessageInterface $message
+     * @return bool
+     */
+    public function send(MessageInterface $message): bool
+    {
+        return $this->transport->send($message);
+    }
 }

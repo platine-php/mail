@@ -62,14 +62,12 @@ class Mail implements TransportInterface
      */
     public function send(MessageInterface $message): bool
     {
-        $result = mail(
-            $message->getHeader('To'),
+        return mail(
+            $message->getEncodedTo(),
             $message->getSubject(),
             $message->getEncodedBody(),
-            $message->getFormattedHeaders(),
-            '-f ' . $message->getHeader('Return-Path')
+            $message->getEncodedHeaders(),
+            '-f' . $message->getHeader('Return-Path')
         );
-
-        return $result;
     }
 }

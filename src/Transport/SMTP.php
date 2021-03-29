@@ -384,7 +384,7 @@ class SMTP implements TransportInterface
         }
 
         $command = (string) $this->message;
-        $command .= self::CRLF . self::CRLF . '.' . self::CRLF;
+        $command .= self::CRLF . '.' . self::CRLF;
         $code = $this->sendCommand($command);
         if ($code !== 250) {
             throw new SMTPRetunCodeException(250, $code, array_pop($this->responses));
