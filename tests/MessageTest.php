@@ -207,6 +207,7 @@ To: to@email.com
 Date: 2021-01-01
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary="' . $uid . '"
+
 This is a multi-part message in MIME format.
 --' . $uid . '
 Content-Type: text/html; charset="UTF-8"

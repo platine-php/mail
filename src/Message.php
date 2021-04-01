@@ -444,6 +444,7 @@ class Message implements MessageInterface
     public function __toString(): string
     {
         $content = $this->getEncodedHeaders();
+        $content .= self::CRLF;
         $content .= $this->getEncodedBody();
 
         return $content;

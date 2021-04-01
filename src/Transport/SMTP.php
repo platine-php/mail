@@ -67,7 +67,7 @@ class SMTP implements TransportInterface
 
     /**
      * The SMTP socket instance
-     * @var resource|false
+     * @var resource|bool
      */
     protected $smtp = null;
 
