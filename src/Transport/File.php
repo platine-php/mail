@@ -66,10 +66,13 @@ class File implements TransportInterface
 
     /**
      * Create new instance
-     * @param string $path
+     * @param string|null $path
      */
-    public function __construct(string $path)
+    public function __construct(?string $path = null)
     {
+        if ($path === null) {
+            $path = sys_get_temp_dir();
+        }
         $this->path = rtrim($path, '/\\') . DIRECTORY_SEPARATOR;
     }
 

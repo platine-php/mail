@@ -443,7 +443,6 @@ class Message implements MessageInterface
      */
     public function __toString(): string
     {
-        $this->prepareHeaders();
         $content = $this->getEncodedHeaders();
         $content .= $this->getEncodedBody();
 
@@ -458,6 +457,10 @@ class Message implements MessageInterface
     {
         if (!array_key_exists('Return-Path', $this->headers)) {
             $this->addHeader('Return-Path', $this->from);
+        }
+
+        if (!array_key_exists('Reply-To', $this->headers)) {
+            $this->addHeader('Reply-To', $this->from);
         }
 
         $this->addHeader('X-Priority', $this->priority)
