@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamFile;
 use Platine\Mail\Message;
-use Platine\PlatineTestCase;
+use Platine\Dev\PlatineTestCase;
 
 /**
  * Message class tests
@@ -19,7 +19,6 @@ use Platine\PlatineTestCase;
  */
 class MessageTest extends PlatineTestCase
 {
-
     public function testConstructor()
     {
             $e = new Message();

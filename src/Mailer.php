@@ -57,7 +57,6 @@ use Platine\Mail\Transport\TransportInterface;
  */
 class Mailer
 {
-
     /**
      * The mail transport instance
      * @var TransportInterface

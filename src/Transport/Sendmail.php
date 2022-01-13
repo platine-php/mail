@@ -57,7 +57,6 @@ use Platine\Mail\MessageInterface;
  */
 class Sendmail implements TransportInterface
 {
-
     /**
      *
      * @var string

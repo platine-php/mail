@@ -9,7 +9,7 @@ use Platine\Mail\Exception\SMTPRetunCodeException;
 use Platine\Mail\Exception\SMTPSecureException;
 use Platine\Mail\Message;
 use Platine\Mail\Transport\SMTP;
-use Platine\PlatineTestCase;
+use Platine\Dev\PlatineTestCase;
 
 /**
  * SMTP class tests
@@ -20,7 +20,6 @@ use Platine\PlatineTestCase;
  */
 class SMTPTest extends PlatineTestCase
 {
-
     public function testConstructor(): void
     {
         $host = 'x.x.x.x';

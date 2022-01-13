@@ -7,7 +7,7 @@ namespace Platine\Test\Sendmail\Transport;
 use Platine\Mail\Exception\MailException;
 use Platine\Mail\Message;
 use Platine\Mail\Transport\Sendmail;
-use Platine\PlatineTestCase;
+use Platine\Dev\PlatineTestCase;
 
 /**
  * Sendmail class tests
@@ -18,7 +18,6 @@ use Platine\PlatineTestCase;
  */
 class SendmailTest extends PlatineTestCase
 {
-
     public function testSendPopenNotExists(): void
     {
         global $mock_function_exists_to_false;

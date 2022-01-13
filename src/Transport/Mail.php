@@ -56,7 +56,6 @@ use Platine\Mail\MessageInterface;
  */
 class Mail implements TransportInterface
 {
-
     /**
      * {@inheritedoc}
      */

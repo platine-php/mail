@@ -6,7 +6,7 @@ namespace Platine\Test\Mail\Transport;
 
 use Platine\Mail\Message;
 use Platine\Mail\Transport\NullTransport;
-use Platine\PlatineTestCase;
+use Platine\Dev\PlatineTestCase;
 
 /**
  * NullTransport class tests
@@ -17,7 +17,6 @@ use Platine\PlatineTestCase;
  */
 class NullTransportTest extends PlatineTestCase
 {
-
     public function testSend(): void
     {
         $message = $this->getMockBuilder(Message::class)

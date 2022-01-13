@@ -6,7 +6,7 @@ namespace Platine\Test\Mail\Transport;
 
 use Platine\Mail\Message;
 use Platine\Mail\Transport\Mail;
-use Platine\PlatineTestCase;
+use Platine\Dev\PlatineTestCase;
 
 /**
  * Mail class tests
@@ -17,7 +17,6 @@ use Platine\PlatineTestCase;
  */
 class MailTest extends PlatineTestCase
 {
-
     public function testSend(): void
     {
         global $mock_mail;

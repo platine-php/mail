@@ -56,7 +56,6 @@ use InvalidArgumentException;
  */
 class Message implements MessageInterface
 {
-
     /**
      * End of line char
      */

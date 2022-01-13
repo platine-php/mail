@@ -7,7 +7,7 @@ namespace Platine\Test\Mail;
 use Platine\Mail\Mailer;
 use Platine\Mail\Message;
 use Platine\Mail\Transport\NullTransport;
-use Platine\PlatineTestCase;
+use Platine\Dev\PlatineTestCase;
 
 /**
  * Mailer class tests
@@ -18,7 +18,6 @@ use Platine\PlatineTestCase;
  */
 class MailerTest extends PlatineTestCase
 {
-
     public function testConstructorTransportIsNull()
     {
             $e = new Mailer();

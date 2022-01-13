@@ -8,7 +8,7 @@ use Platine\Mail\Exception\FileTransportException;
 use Platine\Mail\Exception\MailException;
 use Platine\Mail\Message;
 use Platine\Mail\Transport\File;
-use Platine\PlatineTestCase;
+use Platine\Dev\PlatineTestCase;
 
 /**
  * File class tests
@@ -19,7 +19,6 @@ use Platine\PlatineTestCase;
  */
 class FileTest extends PlatineTestCase
 {
-
     public function testSendDirectoryDoesNotExist(): void
     {
         global $mock_is_dir_to_false;

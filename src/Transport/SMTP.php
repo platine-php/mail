@@ -59,7 +59,6 @@ use Platine\Mail\MessageInterface;
  */
 class SMTP implements TransportInterface
 {
-
     /**
      * End of line char
      */
@@ -390,7 +389,7 @@ class SMTP implements TransportInterface
      */
     protected function mailFrom(): self
     {
-        $command = 'MAIL FROM:<' . $this->message->getFrom() . '>' . self::CRLF;
+        $command = 'MAIL FROM:' . $this->message->getFrom() . self::CRLF;
         $code = $this->sendCommand($command);
         if ($code !== 250) {
             throw new SMTPRetunCodeException(250, $code, array_pop($this->responses));

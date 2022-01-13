@@ -56,7 +56,6 @@ use Platine\Mail\MessageInterface;
  */
 class NullTransport implements TransportInterface
 {
-
     /**
      * {@inheritedoc}
      */

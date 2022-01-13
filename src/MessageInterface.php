@@ -55,7 +55,6 @@ namespace Platine\Mail;
  */
 interface MessageInterface
 {
-
     /**
      * Set sender
      * @param string $email

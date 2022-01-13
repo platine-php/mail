@@ -57,7 +57,6 @@ use Platine\Mail\MessageInterface;
  */
 class File implements TransportInterface
 {
-
     /**
      *
      * @var string

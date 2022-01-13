@@ -56,7 +56,6 @@ use Platine\Mail\MessageInterface;
  */
 interface TransportInterface
 {
-
     /**
      * Send the message
      * @return bool
