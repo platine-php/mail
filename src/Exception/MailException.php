@@ -37,7 +37,7 @@ namespace Platine\Mail\Exception;
 use Exception;
 
 /**
- * Class MailException
+ * @class MailException
  * @package Platine\Mail\Exception
  */
 class MailException extends Exception

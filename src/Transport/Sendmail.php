@@ -52,7 +52,7 @@ use Platine\Mail\Exception\MailException;
 use Platine\Mail\MessageInterface;
 
 /**
- * Class Sendmail
+ * @class Sendmail
  * @package Platine\Mail\Transport
  */
 class Sendmail implements TransportInterface

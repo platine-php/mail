@@ -52,7 +52,7 @@ use Platine\Mail\Exception\FileTransportException;
 use Platine\Mail\MessageInterface;
 
 /**
- * Class File
+ * @class File
  * @package Platine\Mail\Transport
  */
 class File implements TransportInterface

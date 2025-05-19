@@ -35,7 +35,7 @@ declare(strict_types=1);
 namespace Platine\Mail\Exception;
 
 /**
- * Class SMTPException
+ * @class SMTPException
  * @package Platine\Mail\Exception
  */
 class SMTPSecureException extends SMTPException

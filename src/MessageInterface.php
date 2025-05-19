@@ -50,7 +50,7 @@ namespace Platine\Mail;
 
 
 /**
- * Class MessageInterface
+ * @class MessageInterface
  * @package Platine\Mail
  */
 interface MessageInterface
@@ -196,7 +196,7 @@ interface MessageInterface
      *
      * @return mixed
      */
-    public function getHeader(string $name, $default = null);
+    public function getHeader(string $name, mixed $default = null): mixed;
 
     /**
      * Add mail header
@@ -213,7 +213,7 @@ interface MessageInterface
      * @param mixed $value
      * @return self
      */
-    public function addHeader(string $name, $value): self;
+    public function addHeader(string $name, mixed $value): self;
 
     /**
      * Add mail headers

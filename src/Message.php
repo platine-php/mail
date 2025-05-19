@@ -51,7 +51,7 @@ namespace Platine\Mail;
 use InvalidArgumentException;
 
 /**
- * Class Message
+ * @class Message
  * @package Platine\Mail
  */
 class Message implements MessageInterface
@@ -167,7 +167,7 @@ class Message implements MessageInterface
      */
     public function addAttachment(string $path, ?string $filename = null): self
     {
-        if (!file_exists($path)) {
+        if (file_exists($path) === false) {
             throw new InvalidArgumentException(sprintf(
                 'The email attachment file [%s] does not exists.',
                 $path
@@ -178,12 +178,11 @@ class Message implements MessageInterface
             $filename = basename($path);
         }
 
-        $filename = $this->encodeUtf8($this->filterString($filename));
         $data = $this->getAttachmentData($path);
 
         if ($data !== null) {
             $this->attachments[] = [
-                'file' => $filename,
+                'file' => $this->encodeUtf8($this->filterString($filename)),
                 'path' => $path,
                 'data' => chunk_split(base64_encode($data))
             ];
@@ -369,7 +368,7 @@ class Message implements MessageInterface
     /**
      * {@inheritedoc}
      */
-    public function getHeader(string $name, $default = null)
+    public function getHeader(string $name, mixed $default = null): mixed
     {
         $this->prepareHeaders();
 
@@ -381,7 +380,7 @@ class Message implements MessageInterface
     /**
      * {@inheritedoc}
      */
-    public function addHeader(string $name, $value): self
+    public function addHeader(string $name, mixed $value): self
     {
         $this->headers[$name] = $value;
 
@@ -471,10 +470,10 @@ class Message implements MessageInterface
 
         if ($this->hasAttachments()) {
             $this->addHeader('MIME-Version', '1.0')
-               ->addHeader(
-                   'Content-Type',
-                   sprintf('multipart/mixed; boundary="%s"', $this->uid)
-               );
+                 ->addHeader(
+                     'Content-Type',
+                     sprintf('multipart/mixed; boundary="%s"', $this->uid)
+                 );
         }
 
         return $this;
@@ -559,13 +558,15 @@ class Message implements MessageInterface
      */
     protected function formatHeader(string $email, ?string $name = null): string
     {
-        $email = $this->filterEmail($email);
         if (empty($name)) {
             return $email;
         }
-        $name = $this->encodeUtf8($this->filterName($name));
 
-        return sprintf('"%s" <%s>', $name, $email);
+        return sprintf(
+            '"%s" <%s>',
+            $this->encodeUtf8($this->filterName($name)),
+            $this->filterEmail($email)
+        );
     }
 
     /**
@@ -585,10 +586,12 @@ class Message implements MessageInterface
             '>'  => ''
         ];
 
-        $email = strtr($email, $rules);
-        $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+        $emailFiltered = filter_var(
+            strtr($email, $rules),
+            FILTER_SANITIZE_EMAIL
+        );
 
-        return $email === false ? '' : $email;
+        return $emailFiltered === false ? '' : $emailFiltered;
     }
 
     /**
@@ -642,12 +645,12 @@ class Message implements MessageInterface
      */
     protected function encodeUtf8(?string $value): string
     {
-        $value = trim((string)$value);
-        if (preg_match('/(\s)/', $value)) {
-            return $this->encodeUtf8Words($value);
+        $valueClean = trim((string)$value);
+        if (preg_match('/(\s)/', $valueClean)) {
+            return $this->encodeUtf8Words($valueClean);
         }
 
-        return $this->encodeUtf8Word($value);
+        return $this->encodeUtf8Word($valueClean);
     }
 
     /**

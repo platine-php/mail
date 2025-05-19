@@ -54,7 +54,7 @@ use Platine\Mail\Exception\SMTPSecureException;
 use Platine\Mail\MessageInterface;
 
 /**
- * Class SMTP
+ * @class SMTP
  * @package Platine\Mail\Transport
  */
 class SMTP implements TransportInterface
@@ -140,6 +140,8 @@ class SMTP implements TransportInterface
      * Create new instance
      * @param string $host
      * @param int $port
+     * @param int $timeout
+     * @param int $responseTimeout
      */
     public function __construct(
         string $host,
@@ -205,7 +207,7 @@ class SMTP implements TransportInterface
      * Set authentication information
      * @param string $username
      * @param string $password
-     * @return self
+     * @return $this
      */
     public function setAuth(string $username, string $password): self
     {
@@ -278,7 +280,7 @@ class SMTP implements TransportInterface
             $this->timeout
         );
 
-        if (!is_resource($this->smtp)) {
+        if (is_resource($this->smtp) === false) {
             throw new SMTPException(sprintf(
                 'Could not establish SMTP connection to server [%s] error: [%s: %s]',
                 $host,
@@ -368,15 +370,15 @@ class SMTP implements TransportInterface
         }
 
         $command = base64_encode($this->username) . self::CRLF;
-        $code = $this->sendCommand($command);
-        if ($code !== 334) {
-            throw new SMTPRetunCodeException(334, $code, array_pop($this->responses));
+        $codeUsername = $this->sendCommand($command);
+        if ($codeUsername !== 334) {
+            throw new SMTPRetunCodeException(334, $codeUsername, array_pop($this->responses));
         }
 
         $command = base64_encode($this->password) . self::CRLF;
-        $code = $this->sendCommand($command);
-        if ($code !== 235) {
-            throw new SMTPRetunCodeException(235, $code, array_pop($this->responses));
+        $codePassword = $this->sendCommand($command);
+        if ($codePassword !== 235) {
+            throw new SMTPRetunCodeException(235, $codePassword, array_pop($this->responses));
         }
 
         return $this;
@@ -437,9 +439,9 @@ class SMTP implements TransportInterface
 
         $command = (string) $this->message;
         $command .= self::CRLF . '.' . self::CRLF;
-        $code = $this->sendCommand($command);
-        if ($code !== 250) {
-            throw new SMTPRetunCodeException(250, $code, array_pop($this->responses));
+        $codeMessage = $this->sendCommand($command);
+        if ($codeMessage !== 250) {
+            throw new SMTPRetunCodeException(250, $codeMessage, array_pop($this->responses));
         }
 
         return $this;

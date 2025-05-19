@@ -51,7 +51,7 @@ namespace Platine\Mail\Transport;
 use Platine\Mail\MessageInterface;
 
 /**
- * Class NullTransport
+ * @class NullTransport
  * @package Platine\Mail\Transport
  */
 class NullTransport implements TransportInterface

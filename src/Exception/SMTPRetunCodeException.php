@@ -35,7 +35,7 @@ declare(strict_types=1);
 namespace Platine\Mail\Exception;
 
 /**
- * Class SMTPRetunCodeException
+ * @class SMTPRetunCodeException
  * @package Platine\Mail\Exception
  */
 class SMTPRetunCodeException extends SMTPException

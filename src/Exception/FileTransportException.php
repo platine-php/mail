@@ -37,7 +37,7 @@ namespace Platine\Mail\Exception;
 use Exception;
 
 /**
- * Class FileTransportException
+ * @class FileTransportException
  * @package Platine\Mail\Exception
  */
 class FileTransportException extends Exception

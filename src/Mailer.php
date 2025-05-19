@@ -52,7 +52,7 @@ use Platine\Mail\Transport\NullTransport;
 use Platine\Mail\Transport\TransportInterface;
 
 /**
- * Class Mailer
+ * @class Mailer
  * @package Platine\Mail
  */
 class Mailer
@@ -69,7 +69,7 @@ class Mailer
      */
     public function __construct(?TransportInterface $transport = null)
     {
-        $this->transport = $transport ? $transport : new NullTransport();
+        $this->transport = $transport ?? new NullTransport();
     }
 
     /**
