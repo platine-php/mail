@@ -488,7 +488,7 @@ class Message implements MessageInterface
     protected function getAttachmentData(string $path): ?string
     {
         $filesize = filesize($path);
-        if ($filesize === false) {
+        if ($filesize === false || $filesize < 1) {
             return null;
         }
 

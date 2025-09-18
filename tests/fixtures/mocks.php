@@ -102,7 +102,7 @@ $mock_function_exists_to_false = false;
 $mock_function_exists_to_true = false;
 
 
-function fgets($handle)
+function fgets($handle, ?int $length = null)
 {
     global $mock_fgets_to_string, $mock_fgets_return_content;
 
@@ -114,7 +114,7 @@ function fgets($handle)
             return $curr;
         }
     }
-    return \fgets($handle);
+    return \fgets($handle, $length);
 }
 
 function fclose($handler)
@@ -268,12 +268,12 @@ function mail(string $to, string $subject, string $message, $headers = [], strin
     }
 }
 
-function fputs($handle, string $string)
+function fputs($stream, string $data, ?int $length = null)
 {
     global $mock_fputs;
     if ($mock_fputs) {
         return true;
     } else {
-        return \fputs($handle, $string);
+        return \fputs($stream, $data, $length);
     }
 }
