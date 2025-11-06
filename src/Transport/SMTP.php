@@ -62,7 +62,7 @@ class SMTP implements TransportInterface
     /**
      * End of line char
      */
-    protected const CRLF = PHP_EOL;
+    protected const CRLF = "\r\n";
 
     /**
      * The SMTP socket instance
