@@ -610,15 +610,7 @@ class Message implements MessageInterface
             '>'  => ']',
         ];
 
-        $filtered = filter_var(
-            $name,
-            FILTER_SANITIZE_STRING,
-            FILTER_FLAG_NO_ENCODE_QUOTES
-        );
-
-        if ($filtered === false) {
-            return '';
-        }
+        $filtered = htmlspecialchars(strip_tags($name), ENT_NOQUOTES);
 
         return trim(strtr($filtered, $rules));
     }
