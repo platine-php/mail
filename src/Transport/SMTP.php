@@ -60,6 +60,13 @@ use Platine\Mail\MessageInterface;
 class SMTP implements TransportInterface
 {
     /**
+     * Encryption values
+     */
+    public const ENCRYPTION_NONE = 'none';
+    public const ENCRYPTION_STARTTLS = 'starttls';
+    public const ENCRYPTION_TLS = 'tls';
+
+    /**
      * End of line char
      */
     protected const CRLF = "\r\n";
@@ -83,18 +90,6 @@ class SMTP implements TransportInterface
     protected int $port = 25;
 
     /**
-     * Whether need use SSL connection
-     * @var bool
-     */
-    protected bool $ssl = false;
-
-    /**
-     * Whether need use TLS connection
-     * @var bool
-     */
-    protected bool $tls = false;
-
-    /**
      * The username
      * @var string
      */
@@ -105,6 +100,12 @@ class SMTP implements TransportInterface
      * @var string
      */
     protected string $password = '';
+
+    /**
+     * The encryption
+     * @var string
+     */
+    protected string $encryption = self::ENCRYPTION_NONE;
 
     /**
      * The instance of message to send
@@ -178,31 +179,6 @@ class SMTP implements TransportInterface
         return $this;
     }
 
-
-    /**
-     * Set TLS connection
-     * @param bool $status
-     * @return $this
-     */
-    public function tls(bool $status = true): self
-    {
-        $this->tls = $status;
-
-        return $this;
-    }
-
-    /**
-     * Set SSL connection
-     * @param bool $status
-     * @return $this
-     */
-    public function ssl(bool $status = true): self
-    {
-        $this->ssl = $status;
-
-        return $this;
-    }
-
     /**
      * Set authentication information
      * @param string $username
@@ -218,6 +194,31 @@ class SMTP implements TransportInterface
     }
 
     /**
+     * Set the encryption
+     * @param string $encryption
+     * @return $this
+     */
+    public function setEncryption(string $encryption): self
+    {
+        $values = [
+            self::ENCRYPTION_NONE,
+            self::ENCRYPTION_STARTTLS,
+            self::ENCRYPTION_TLS
+        ];
+
+        if (in_array($encryption, $values) === false) {
+            throw new SMTPException(sprintf(
+                'Invalid encryption value [%s], must be one of [%s]',
+                $encryption,
+                implode(', ', $values)
+            ));
+        }
+
+        $this->encryption = $encryption;
+        return $this;
+    }
+
+    /**
      * {@inheritedoc}
      */
     public function send(MessageInterface $message): bool
@@ -225,18 +226,11 @@ class SMTP implements TransportInterface
         $this->message = $message;
 
         $this->connect()
-              ->ehlo();
-
-        if ($this->tls) {
-            $this->starttls()
-                  ->ehlo();
-        }
-
-        $this->authLogin()
-              ->mailFrom()
-              ->rcptTo()
-              ->data()
-              ->quit();
+             ->authLogin()
+             ->mailFrom()
+             ->rcptTo()
+             ->data()
+             ->quit();
 
         if (is_resource($this->smtp)) {
             return fclose($this->smtp);
@@ -263,17 +257,36 @@ class SMTP implements TransportInterface
         return $this->responses;
     }
 
-        /**
-     * Connect to server
+    /**
+     * Enable support of TLS for the socket
+     * @return $this
+     * @throws SMTPSecureException
+     */
+    protected function enableTls(): self
+    {
+        if (
+            !stream_socket_enable_crypto(
+                $this->smtp,
+                true,
+                STREAM_CRYPTO_METHOD_TLS_CLIENT
+            )
+        ) {
+            throw new SMTPSecureException('Start TLS failed to enable crypto');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Connect to SMTP server
      * @return $this
      * @throws SMTPException
      * @throws SMTPRetunCodeException
      */
     protected function connect(): self
     {
-        $host = $this->ssl ? 'ssl://' . $this->host : $this->host;
         $this->smtp = @fsockopen(
-            $host,
+            $this->host,
             $this->port,
             $errorNumber,
             $errorMessage,
@@ -282,8 +295,9 @@ class SMTP implements TransportInterface
 
         if (is_resource($this->smtp) === false) {
             throw new SMTPException(sprintf(
-                'Could not establish SMTP connection to server [%s] error: [%s: %s]',
-                $host,
+                'Could not establish SMTP connection to server [%s:%d] error: [%s: %s]',
+                $this->host,
+                $this->port,
                 $errorNumber,
                 $errorMessage
             ));
@@ -294,6 +308,22 @@ class SMTP implements TransportInterface
             throw new SMTPRetunCodeException(220, $code, array_pop($this->responses));
         }
 
+        switch ($this->encryption) {
+            case self::ENCRYPTION_TLS:
+                $this->enableTls()
+                     ->ehlo();
+                break;
+            case self::ENCRYPTION_STARTTLS:
+                $this->ehlo()
+                     ->starttls()
+                     ->enableTls()
+                     ->ehlo();
+                break;
+            case self::ENCRYPTION_NONE:
+                $this->ehlo();
+                break;
+        }
+
         return $this;
     }
 
@@ -301,36 +331,12 @@ class SMTP implements TransportInterface
      * Start TLS connection
      * @return $this
      * @throws SMTPRetunCodeException
-     * @throws SMTPSecureException
      */
     protected function starttls(): self
     {
         $code = $this->sendCommand('STARTTLS');
         if ($code !== 220) {
             throw new SMTPRetunCodeException(220, $code, array_pop($this->responses));
-        }
-
-        /**
-        * STREAM_CRYPTO_METHOD_TLS_CLIENT is quite the mess ...
-        *
-        * - On PHP <5.6 it doesn't even mean TLS, but SSL 2.0, and there's no option to use actual TLS
-        * - On PHP 5.6.0-5.6.6, >=7.2 it means negotiation with any of TLS 1.0, 1.1, 1.2
-        * - On PHP 5.6.7-7.1.* it means only TLS 1.0
-        *
-        * We want the negotiation, so we'll force it below ...
-        */
-        if (is_resource($this->smtp)) {
-            if (
-                !stream_socket_enable_crypto(
-                    $this->smtp,
-                    true,
-                    STREAM_CRYPTO_METHOD_TLSv1_0_CLIENT
-                    | STREAM_CRYPTO_METHOD_TLSv1_1_CLIENT
-                    | STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
-                )
-            ) {
-                throw new SMTPSecureException('Start TLS failed to enable crypto');
-            }
         }
 
         return $this;

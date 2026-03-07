@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Platine\Test\SMTP\Transport;
 
+use Platine\Dev\PlatineTestCase;
 use Platine\Mail\Exception\SMTPException;
 use Platine\Mail\Exception\SMTPRetunCodeException;
 use Platine\Mail\Exception\SMTPSecureException;
 use Platine\Mail\Message;
 use Platine\Mail\Transport\SMTP;
-use Platine\Dev\PlatineTestCase;
 
 /**
  * SMTP class tests
@@ -54,28 +54,31 @@ class SMTPTest extends PlatineTestCase
         $this->assertEquals(100, $this->getPropertyValue(SMTP::class, $e, 'responseTimeout'));
     }
 
-    public function testTlsSsl(): void
+    public function testSetEncryption(): void
     {
         $host = 'x.x.x.x';
         $e = new SMTP($host);
 
-        $this->assertFalse($this->getPropertyValue(SMTP::class, $e, 'tls'));
-        $this->assertFalse($this->getPropertyValue(SMTP::class, $e, 'ssl'));
+        $this->assertEquals(
+            SMTP::ENCRYPTION_NONE,
+            $this->getPropertyValue(SMTP::class, $e, 'encryption')
+        );
 
-        $e->tls(true);
-        $e->ssl(true);
+        $e->setEncryption(SMTP::ENCRYPTION_TLS);
 
-        $this->assertTrue($this->getPropertyValue(SMTP::class, $e, 'tls'));
-        $this->assertTrue($this->getPropertyValue(SMTP::class, $e, 'ssl'));
+        $this->assertEquals(
+            SMTP::ENCRYPTION_TLS,
+            $this->getPropertyValue(SMTP::class, $e, 'encryption')
+        );
+
+        $this->expectException(SMTPException::class);
+        $e->setEncryption('fake');
     }
 
     public function testAuth(): void
     {
         $host = 'x.x.x.x';
         $e = new SMTP($host);
-
-        $this->assertEmpty($this->getPropertyValue(SMTP::class, $e, 'tls'));
-        $this->assertEmpty($this->getPropertyValue(SMTP::class, $e, 'ssl'));
 
         $username = 'foo';
         $password = 'bar';
@@ -123,7 +126,6 @@ class SMTPTest extends PlatineTestCase
 
         $host = 'x.x.x.x';
         $e = new SMTP($host);
-        $e->ssl();
         $this->expectException(SMTPException::class);
         $e->send($message);
     }
@@ -148,7 +150,6 @@ class SMTPTest extends PlatineTestCase
 
         $host = 'x.x.x.x';
         $e = new SMTP($host);
-        $e->ssl();
         $this->expectException(SMTPRetunCodeException::class);
         $e->send($message);
     }
@@ -201,7 +202,7 @@ class SMTPTest extends PlatineTestCase
 
         $host = 'x.x.x.x';
         $e = new SMTP($host);
-        $e->tls();
+        $e->setEncryption(SMTP::ENCRYPTION_STARTTLS);
         $this->expectException(SMTPRetunCodeException::class);
         $e->send($message);
     }
@@ -230,7 +231,7 @@ class SMTPTest extends PlatineTestCase
 
         $host = 'x.x.x.x';
         $e = new SMTP($host);
-        $e->tls();
+        $e->setEncryption(SMTP::ENCRYPTION_STARTTLS);
         $this->expectException(SMTPSecureException::class);
         $e->send($message);
     }
@@ -259,7 +260,6 @@ class SMTPTest extends PlatineTestCase
 
         $host = 'x.x.x.x';
         $e = new SMTP($host);
-        $e->tls();
         $this->expectException(SMTPRetunCodeException::class);
         $e->send($message);
     }
@@ -650,5 +650,77 @@ class SMTPTest extends PlatineTestCase
         $this->assertFalse($e->send($message));
         $this->assertCount(9, $e->getCommands());
         $this->assertCount(10, $e->getResponses());
+    }
+
+
+    public function testSendTLS(): void
+    {
+        $this->sendSuccessWithEncryption(SMTP::ENCRYPTION_TLS);
+    }
+
+    public function testSendSTARTTLS(): void
+    {
+        $this->sendSuccessWithEncryption(SMTP::ENCRYPTION_STARTTLS);
+    }
+
+    protected function sendSuccessWithEncryption(string $encrytion): void
+    {
+        global $mock_is_resource_to_true,
+               $mock_fsockopen_to_true,
+               $mock_fgets_to_string,
+                $mock_fgets_return_content,
+                $mock_stream_set_timeout,
+                $mock_fputs,
+                $mock_fclose_to_true,
+                $mock_stream_socket_enable_crypto_to_true;
+
+        $mock_fclose_to_true = true;
+        $mock_fputs = true;
+        $mock_stream_set_timeout = true;
+        $mock_is_resource_to_true = true;
+        $mock_fsockopen_to_true = true;
+        $mock_fgets_to_string = true;
+        $mock_stream_socket_enable_crypto_to_true = true;
+        if ($encrytion === SMTP::ENCRYPTION_TLS) {
+            $mock_fgets_return_content = [
+                '220 OK',
+                '250 OK',
+                '334 OK',
+                '334 OK',
+                '235 OK',
+                '250 OK',
+                '250 OK',
+                '354 OK',
+                '250 OK',
+                '221 OK',
+            ];
+        } else {
+            $mock_fgets_return_content = [
+                '220 OK',
+                '250 OK',
+                '220 OK',
+                '250 OK',
+                '334 OK',
+                '334 OK',
+                '235 OK',
+                '250 OK',
+                '250 OK',
+                '354 OK',
+                '250 OK',
+                '221 OK',
+            ];
+        }
+
+        $message = $this->getMockInstance(Message::class, [
+            'getTo' => ['foo@bar.com'],
+            'getCc' => [],
+            'getBcc' => []
+        ]);
+
+        $host = 'x.x.x.x';
+        $e = new SMTP($host);
+        $e->setAuth('foo', 'bar');
+        $e->setEncryption($encrytion);
+        $this->assertTrue($e->send($message));
     }
 }
