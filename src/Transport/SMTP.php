@@ -476,7 +476,7 @@ class SMTP implements TransportInterface
             $response = '';
 
             while ($str = fgets($this->smtp, 515)) {
-                $response .= rtrim($str);
+                $response .= $str;
 
                 if (substr($str, 3, 1) === ' ') {
                     $code = (int) substr($str, 0, 3);
@@ -485,7 +485,7 @@ class SMTP implements TransportInterface
             }
             $this->logs[] = [
                 'type' => 'S',
-                'message' => $response
+                'message' => rtrim($response)
             ];
         }
 
