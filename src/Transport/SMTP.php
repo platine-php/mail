@@ -476,7 +476,7 @@ class SMTP implements TransportInterface
             $response = '';
 
             while ($str = fgets($this->smtp, 515)) {
-                $response .= $str;
+                $response .= rtrim($str);
 
                 if (substr($str, 3, 1) === ' ') {
                     $code = (int) substr($str, 0, 3);
