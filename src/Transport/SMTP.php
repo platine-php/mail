@@ -502,11 +502,12 @@ class SMTP implements TransportInterface
      */
     protected function getLastServerResponse(): string
     {
-        $log = array_pop($this->logs);
-        if (isset($log['type']) && $log['type'] === 'S') {
+        $log = end($this->logs);
+        reset($this->logs);
+        if ($log !== false && isset($log['type']) && $log['type'] === 'S') {
             return $log['message'];
         }
-
+        
         return '';
     }
 
