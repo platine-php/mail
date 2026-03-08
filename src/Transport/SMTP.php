@@ -456,7 +456,7 @@ class SMTP implements TransportInterface
      */
     protected function sendCommand(string $command): int
     {
-        $this->logs[] = ['type' => 'C', 'message' => $command];
+        $this->logs[] = ['type' => 'C', 'message' => rtrim($command)];
         if (is_resource($this->smtp)) {
             fputs($this->smtp, $command, strlen($command));
         }
