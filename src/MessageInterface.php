@@ -70,6 +70,12 @@ interface MessageInterface
     public function getFrom(): string;
 
     /**
+     * Return the value of sender email address
+     * @return string
+     */
+    public function getFromEmail(): string;
+
+    /**
      * Set reply information
      * @param string $email
      * @param string|null $name

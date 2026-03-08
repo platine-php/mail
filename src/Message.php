@@ -68,6 +68,12 @@ class Message implements MessageInterface
     protected string $from = '';
 
     /**
+     * The from email address used in some context
+     * @var string
+     */
+    protected string $fromEmail = '';
+
+    /**
      *
      * @var string
      */
@@ -147,6 +153,7 @@ class Message implements MessageInterface
     public function reset(): self
     {
         $this->from = '';
+        $this->fromEmail = '';
         $this->replyTo = '';
         $this->to = [];
         $this->cc = [];
@@ -270,6 +277,7 @@ class Message implements MessageInterface
      */
     public function setFrom(string $email, ?string $name = null): self
     {
+        $this->fromEmail = $email;
         $this->from = $this->formatHeader($email, $name);
 
         return $this->addMailHeader('From', $email, $name);
@@ -281,6 +289,14 @@ class Message implements MessageInterface
     public function getFrom(): string
     {
         return $this->from;
+    }
+
+    /**
+     * {@inheritedoc}
+     */
+    public function getFromEmail(): string
+    {
+        return $this->fromEmail;
     }
 
     /**
@@ -455,7 +471,7 @@ class Message implements MessageInterface
     protected function prepareHeaders(): self
     {
         if (!array_key_exists('Return-Path', $this->headers)) {
-            $this->addHeader('Return-Path', $this->from);
+            $this->addHeader('Return-Path', $this->fromEmail);
         }
 
         if (!array_key_exists('Reply-To', $this->headers)) {

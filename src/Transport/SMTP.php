@@ -387,7 +387,7 @@ class SMTP implements TransportInterface
      */
     protected function mailFrom(): self
     {
-        $command = 'MAIL FROM:' . $this->message->getFrom() . self::CRLF;
+        $command = 'MAIL FROM:<' . $this->message->getFromEmail() . '>' . self::CRLF;
         $code = $this->sendCommand($command);
         $this->checkReturnCode(250, $code);
 
@@ -507,7 +507,7 @@ class SMTP implements TransportInterface
         if ($log !== false && isset($log['type']) && $log['type'] === 'S') {
             return $log['message'];
         }
-        
+
         return '';
     }
 
