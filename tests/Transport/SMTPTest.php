@@ -39,6 +39,24 @@ class SMTPTest extends PlatineTestCase
         $this->assertEquals($rtimeout, $this->getPropertyValue(SMTP::class, $e, 'responseTimeout'));
     }
 
+    public function testGetLastServerResponseEmpty(): void
+    {
+        $host = 'x.x.x.x';
+        $port = 26;
+        $timeout = 100;
+        $rtimeout = 100;
+        $e = new SMTP(
+            $host,
+            $port,
+            $timeout,
+            $rtimeout
+        );
+
+        $res = $this->runPrivateProtectedMethod($e, 'getLastServerResponse', []);
+
+        $this->assertEmpty($res);
+    }
+
     public function testTimeOuts(): void
     {
         $host = 'x.x.x.x';
@@ -648,8 +666,8 @@ class SMTPTest extends PlatineTestCase
         $e = new SMTP($host);
         $e->setAuth('foo', 'bar');
         $this->assertFalse($e->send($message));
-        $this->assertCount(9, $e->getCommands());
-        $this->assertCount(10, $e->getResponses());
+        $this->assertCount(19, $e->getLogs());
+        $this->assertNotEmpty($e->debugInfo());
     }
 
 

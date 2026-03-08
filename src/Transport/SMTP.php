@@ -114,16 +114,10 @@ class SMTP implements TransportInterface
     protected MessageInterface $message;
 
     /**
-     * List of all commands send to server
-     * @var array<int, string>
+     * Log of messages between client and server
+     * @var array<array<string, string>>
      */
-    protected array $commands = [];
-
-    /**
-     * List of all responses receive from server
-     * @var array<int, string>
-     */
-    protected array $responses = [];
+    protected array $logs = [];
 
     /**
      * Connection timeout
@@ -240,21 +234,25 @@ class SMTP implements TransportInterface
     }
 
     /**
-     * Return the list of commands send to server
-     * @return array<int, string>
+     * Return the list of messages from client and server
+     * @return array<array<string, string>>
      */
-    public function getCommands(): array
+    public function getLogs(): array
     {
-        return $this->commands;
+        return $this->logs;
     }
 
     /**
-     * Return the list of responses from server
-     * @return array<int, string>
+     * Return the debug information
+     * @return string
      */
-    public function getResponses(): array
+    public function debugInfo(): string
     {
-        return $this->responses;
+        $messages = [];
+        foreach ($this->logs as $log) {
+            $messages[] = sprintf('%s: %s', $log['type'], $log['message']);
+        }
+        return implode("\n", $messages);
     }
 
     /**
@@ -303,23 +301,24 @@ class SMTP implements TransportInterface
             ));
         }
 
-        $code = $this->getCode();
-        if ($code !== 220) {
-            throw new SMTPRetunCodeException(220, $code, array_pop($this->responses));
-        }
-
         switch ($this->encryption) {
             case self::ENCRYPTION_TLS:
-                $this->enableTls()
-                     ->ehlo();
+                $this->enableTls();
+                $code = $this->getCode();
+                $this->checkReturnCode(220, $code);
+                $this->ehlo();
                 break;
             case self::ENCRYPTION_STARTTLS:
+                $code = $this->getCode();
+                $this->checkReturnCode(220, $code);
                 $this->ehlo()
                      ->starttls()
                      ->enableTls()
                      ->ehlo();
                 break;
             case self::ENCRYPTION_NONE:
+                $code = $this->getCode();
+                $this->checkReturnCode(220, $code);
                 $this->ehlo();
                 break;
         }
@@ -335,9 +334,7 @@ class SMTP implements TransportInterface
     protected function starttls(): self
     {
         $code = $this->sendCommand('STARTTLS');
-        if ($code !== 220) {
-            throw new SMTPRetunCodeException(220, $code, array_pop($this->responses));
-        }
+        $this->checkReturnCode(220, $code);
 
         return $this;
     }
@@ -351,9 +348,7 @@ class SMTP implements TransportInterface
     {
         $command = 'EHLO ' . $this->host . self::CRLF;
         $code = $this->sendCommand($command);
-        if ($code !== 250) {
-            throw new SMTPRetunCodeException(250, $code, array_pop($this->responses));
-        }
+        $this->checkReturnCode(250, $code);
 
         return $this;
     }
@@ -371,21 +366,16 @@ class SMTP implements TransportInterface
 
         $command = 'AUTH LOGIN' . self::CRLF;
         $code = $this->sendCommand($command);
-        if ($code !== 334) {
-            throw new SMTPRetunCodeException(334, $code, array_pop($this->responses));
-        }
+        $this->checkReturnCode(334, $code);
+
 
         $command = base64_encode($this->username) . self::CRLF;
         $codeUsername = $this->sendCommand($command);
-        if ($codeUsername !== 334) {
-            throw new SMTPRetunCodeException(334, $codeUsername, array_pop($this->responses));
-        }
+        $this->checkReturnCode(334, $codeUsername);
 
         $command = base64_encode($this->password) . self::CRLF;
         $codePassword = $this->sendCommand($command);
-        if ($codePassword !== 235) {
-            throw new SMTPRetunCodeException(235, $codePassword, array_pop($this->responses));
-        }
+        $this->checkReturnCode(235, $codePassword);
 
         return $this;
     }
@@ -399,9 +389,7 @@ class SMTP implements TransportInterface
     {
         $command = 'MAIL FROM:' . $this->message->getFrom() . self::CRLF;
         $code = $this->sendCommand($command);
-        if ($code !== 250) {
-            throw new SMTPRetunCodeException(250, $code, array_pop($this->responses));
-        }
+        $this->checkReturnCode(250, $code);
 
         return $this;
     }
@@ -422,9 +410,7 @@ class SMTP implements TransportInterface
         foreach ($recipients as $email) {
             $command = 'RCPT TO:<' . $email . '>' . self::CRLF;
             $code = $this->sendCommand($command);
-            if ($code !== 250) {
-                throw new SMTPRetunCodeException(250, $code, array_pop($this->responses));
-            }
+            $this->checkReturnCode(250, $code);
         }
 
         return $this;
@@ -439,16 +425,12 @@ class SMTP implements TransportInterface
     {
         $command = 'DATA' . self::CRLF;
         $code = $this->sendCommand($command);
-        if ($code !== 354) {
-            throw new SMTPRetunCodeException(354, $code, array_pop($this->responses));
-        }
+        $this->checkReturnCode(354, $code);
 
         $command = (string) $this->message;
         $command .= self::CRLF . '.' . self::CRLF;
         $codeMessage = $this->sendCommand($command);
-        if ($codeMessage !== 250) {
-            throw new SMTPRetunCodeException(250, $codeMessage, array_pop($this->responses));
-        }
+        $this->checkReturnCode(250, $codeMessage);
 
         return $this;
     }
@@ -462,9 +444,7 @@ class SMTP implements TransportInterface
     {
         $command = 'QUIT' . self::CRLF;
         $code = $this->sendCommand($command);
-        if ($code !== 221) {
-            throw new SMTPRetunCodeException(221, $code, array_pop($this->responses));
-        }
+        $this->checkReturnCode(221, $code);
 
         return $this;
     }
@@ -476,7 +456,7 @@ class SMTP implements TransportInterface
      */
     protected function sendCommand(string $command): int
     {
-        $this->commands[] = $command;
+        $this->logs[] = ['type' => 'C', 'message' => $command];
         if (is_resource($this->smtp)) {
             fputs($this->smtp, $command, strlen($command));
         }
@@ -490,18 +470,61 @@ class SMTP implements TransportInterface
      */
     protected function getCode(): int
     {
+        $code = -1;
         if (is_resource($this->smtp)) {
             stream_set_timeout($this->smtp, $this->responseTimeout);
+            $response = '';
+
             while ($str = fgets($this->smtp, 515)) {
-                $this->responses[] = $str;
+                $response .= $str;
 
                 if (substr($str, 3, 1) === ' ') {
-                    $code = substr($str, 0, 3);
-                    return (int) $code;
+                    $code = (int) substr($str, 0, 3);
+                    break;
                 }
             }
+            $this->logs[] = [
+                'type' => 'S',
+                'message' => $response
+            ];
         }
 
-        throw new SMTPException('SMTP Server did not respond with anything I recognized');
+        if ($code === -1) {
+            throw new SMTPException('SMTP Server did not respond with anything I recognized');
+        }
+
+        return $code;
+    }
+
+    /**
+     * Return the last server response message
+     * @return string
+     */
+    protected function getLastServerResponse(): string
+    {
+        $log = array_pop($this->logs);
+        if (isset($log['type']) && $log['type'] === 'S') {
+            return $log['message'];
+        }
+
+        return '';
+    }
+
+    /**
+     * Check the return code against the expected code
+     * @param int $expected
+     * @param int $responseCode
+     * @return void
+     * @throws SMTPRetunCodeException
+     */
+    protected function checkReturnCode(int $expected, int $responseCode): void
+    {
+        if ($responseCode !== $expected) {
+            throw new SMTPRetunCodeException(
+                $expected,
+                $responseCode,
+                $this->getLastServerResponse()
+            );
+        }
     }
 }
