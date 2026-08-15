@@ -48,7 +48,7 @@ class MessageTest extends PlatineTestCase
         //filter_var return false
         $mock_filter_var_to_false = true;
         $e->setFrom($email, $name);
-        $expected = '"=?UTF-8?B??=" <>';
+        $expected = '"=?UTF-8?B?Bar?=" <>';
         $this->assertEquals($expected, $e->getFrom());
     }
 
