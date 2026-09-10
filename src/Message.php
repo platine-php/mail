@@ -470,11 +470,11 @@ class Message implements MessageInterface
      */
     protected function prepareHeaders(): self
     {
-        if (!array_key_exists('Return-Path', $this->headers)) {
+        if (array_key_exists('Return-Path', $this->headers) === false) {
             $this->addHeader('Return-Path', $this->fromEmail);
         }
 
-        if (!array_key_exists('Reply-To', $this->headers)) {
+        if (array_key_exists('Reply-To', $this->headers) === false) {
             $this->addHeader('Reply-To', $this->from);
         }
 
@@ -482,14 +482,14 @@ class Message implements MessageInterface
                ->addHeader('X-Mailer', 'Platine PHP Mail')
                ->addHeader('Subject', $this->subject)
                ->addHeader('To', join(', ', $this->to))
+               ->addHeader('MIME-Version', '1.0')
                ->addHeader('Date', date('r'));
 
         if ($this->hasAttachments()) {
-            $this->addHeader('MIME-Version', '1.0')
-                 ->addHeader(
-                     'Content-Type',
-                     sprintf('multipart/mixed; boundary="%s"', $this->uid)
-                 );
+            $this->addHeader(
+                'Content-Type',
+                sprintf('multipart/mixed; boundary="%s"', $this->uid)
+            );
         }
 
         return $this;
