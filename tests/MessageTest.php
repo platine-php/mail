@@ -42,14 +42,14 @@ class MessageTest extends PlatineTestCase
 
         $name = 'Bar';
         $e->setFrom($email, $name);
-        $expected = sprintf('"=?UTF-8?B?%s?=" <%s>', $name, $email);
+        $expected = sprintf('%s <%s>', $name, $email);
         $this->assertEquals($expected, $e->getFrom());
         $this->assertEquals($email, $e->getFromEmail());
 
         //filter_var return false
         $mock_filter_var_to_false = true;
         $e->setFrom($email, $name);
-        $expected = '"=?UTF-8?B?Bar?=" <>';
+        $expected = 'Bar <>';
         $this->assertEquals($expected, $e->getFrom());
     }
 
@@ -74,11 +74,11 @@ class MessageTest extends PlatineTestCase
         $tos = $e->getTo();
         $this->assertCount(2, $tos);
         $this->assertEquals('foo@bar.com', $tos[0]);
-        $expected = sprintf('"=?UTF-8?B?%s?=" <%s>', $name, $email);
+        $expected = sprintf('%s <%s>', $name, $email);
         $this->assertEquals($expected, $tos[1]);
 
         $expected = sprintf(
-            '%s, "=?UTF-8?B?%s?=" <%s>',
+            '%s, %s <%s>',
             'foo@bar.com',
             'Foo',
             'foo@bar.com'
@@ -105,7 +105,7 @@ class MessageTest extends PlatineTestCase
         $this->assertEquals('foo@bar.com', $cc[0]);
         $this->assertEquals('baz@foo.com', $cc['baz']);
         $expected = sprintf(
-            '%s, "=?UTF-8?B?%s?=" <%s>',
+            '%s, %s <%s>',
             'foo@bar.com',
             'baz',
             'baz@foo.com'
@@ -132,7 +132,7 @@ class MessageTest extends PlatineTestCase
         $this->assertEquals('foo@bar.com', $bcc['foo']);
         $this->assertEquals('baz@foo.com', $bcc['baz']);
         $expected = sprintf(
-            '"=?UTF-8?B?%s?=" <%s>, "=?UTF-8?B?%s?=" <%s>',
+            '%s <%s>, %s <%s>',
             'foo',
             'foo@bar.com',
             'baz',
@@ -162,7 +162,7 @@ class MessageTest extends PlatineTestCase
 
         $name = 'Bar';
         $e->setReplyTo($email, $name);
-        $expected = sprintf('"=?UTF-8?B?%s?=" <%s>', $name, $email);
+        $expected = sprintf('%s <%s>', $name, $email);
         $this->assertEquals($expected, $e->getHeader('Reply-To'));
     }
 
@@ -202,7 +202,7 @@ Return-Path: from@email.com
 Reply-To: from@email.com
 X-Priority: 3
 X-Mailer: Platine PHP Mail
-Subject: =?UTF-8?B?Subject?=
+Subject: Subject
 To: to@email.com
 Date: 2021-01-01
 MIME-Version: 1.0
@@ -218,9 +218,9 @@ Body
 
 
 --' . $uid . '
-Content-Type: application/octet-stream; name="=?UTF-8?B?attachment.pdf?="
+Content-Type: application/octet-stream; name="attachment.pdf"
 Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="=?UTF-8?B?attachment.pdf?="
+Content-Disposition: attachment; filename="attachment.pdf"
 
 foo bar
 
@@ -237,8 +237,7 @@ foo bar
         $e = new Message();
         $subject = 'foo bar';
         $e->setSubject($subject);
-        $expected = sprintf('=?UTF-8?B?%s?==?UTF-8?B? ?==?UTF-8?B?%s?=', 'foo', 'bar');
-        $this->assertEquals($expected, $e->getSubject());
+        $this->assertEquals($subject, $e->getSubject());
     }
 
     public function testSetBody()
@@ -347,7 +346,7 @@ foo bar
         $this->assertArrayHasKey('data', $attachments[0]);
         $this->assertArrayHasKey('path', $attachments[0]);
         $this->assertEquals($file->url(), $attachments[0]['path']);
-        $expectedFilename = sprintf('=?UTF-8?B?%s?=', $filename === null ? $file->getName() : $filename);
+        $expectedFilename = sprintf('%s', $filename === null ? $file->getName() : $filename);
         $this->assertEquals($expectedFilename, $attachments[0]['file']);
         $this->assertEquals('foo bar', $attachments[0]['data']);
     }

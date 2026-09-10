@@ -578,9 +578,29 @@ class Message implements MessageInterface
             return $email;
         }
 
+        $encoded = $this->encodeUtf8($this->filterName($name));
+
+        // Encoded string (non-ASCII): NO quotation marks (RFC 2047)
+        if (str_starts_with($encoded, '=?UTF-8?')) {
+            return sprintf(
+                '%s <%s>',
+                $encoded,
+                $this->filterEmail($email)
+            );
+        }
+
+        // Simple ASCII name: use quotation marks ONLY if there are special characters
+        if (preg_match('/[^A-Za-z0-9 !#$%&\'*+\/=?^_`{|}~-]/', $encoded)) {
+            return sprintf(
+                '"%s" <%s>',
+                addcslashes($encoded, '"\\'),
+                $this->filterEmail($email)
+            );
+        }
+
         return sprintf(
-            '"%s" <%s>',
-            $this->encodeUtf8($this->filterName($name)),
+            '%s <%s>',
+            $encoded,
             $this->filterEmail($email)
         );
     }
@@ -654,10 +674,16 @@ class Message implements MessageInterface
     protected function encodeUtf8(?string $value): string
     {
         $valueClean = trim((string)$value);
-        if (preg_match('/(\s)/', $valueClean)) {
-            return $this->encodeUtf8Words($valueClean);
+        if ($valueClean === '') {
+            return '';
         }
 
+        // If the value is pure ASCII, leave it as-is (no need to encode).
+        if (!preg_match('/[\x80-\xFF]/', $valueClean)) {
+            return $valueClean;
+        }
+
+        // Non-ASCII present: one single encoded-word, correctly formatted.
         return $this->encodeUtf8Word($valueClean);
     }
 
@@ -669,20 +695,5 @@ class Message implements MessageInterface
     protected function encodeUtf8Word(string $value): string
     {
         return sprintf('=?UTF-8?B?%s?=', base64_encode($value));
-    }
-
-    /**
-     * Encode the UTF-8 for multiple word
-     * @param string $value
-     * @return string
-     */
-    protected function encodeUtf8Words(string $value): string
-    {
-        $words = explode(' ', $value);
-        $encoded = [];
-        foreach ($words as $word) {
-            $encoded[] = $this->encodeUtf8Word($word);
-        }
-        return join($this->encodeUtf8Word(' '), $encoded);
     }
 }
