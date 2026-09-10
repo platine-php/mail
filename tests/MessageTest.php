@@ -40,16 +40,16 @@ class MessageTest extends PlatineTestCase
 
         $mock_base64_encode = true;
 
-        $name = 'Bar';
+        $name = 'Bâr';
         $e->setFrom($email, $name);
-        $expected = sprintf('%s <%s>', $name, $email);
+        $expected = sprintf('=?UTF-8?B?%s?= <%s>', $name, $email);
         $this->assertEquals($expected, $e->getFrom());
         $this->assertEquals($email, $e->getFromEmail());
 
         //filter_var return false
         $mock_filter_var_to_false = true;
         $e->setFrom($email, $name);
-        $expected = 'Bar <>';
+        $expected = '=?UTF-8?B?Bâr?= <>';
         $this->assertEquals($expected, $e->getFrom());
     }
 
@@ -69,18 +69,18 @@ class MessageTest extends PlatineTestCase
         $e->setTo($email, $name);
         $this->assertCount(1, $e->getTo());
 
-        $name = 'Foo';
+        $name = 'Demo, Mail';
         $e->setTo($email, $name);
         $tos = $e->getTo();
         $this->assertCount(2, $tos);
         $this->assertEquals('foo@bar.com', $tos[0]);
-        $expected = sprintf('%s <%s>', $name, $email);
+        $expected = sprintf('"%s" <%s>', $name, $email);
         $this->assertEquals($expected, $tos[1]);
 
         $expected = sprintf(
-            '%s, %s <%s>',
+            '%s, "%s" <%s>',
             'foo@bar.com',
-            'Foo',
+            'Demo, Mail',
             'foo@bar.com'
         );
         $this->assertEquals($expected, $e->getEncodedTo());
@@ -204,8 +204,8 @@ X-Priority: 3
 X-Mailer: Platine PHP Mail
 Subject: Subject
 To: to@email.com
-Date: 2021-01-01
 MIME-Version: 1.0
+Date: 2021-01-01
 Content-Type: multipart/mixed; boundary="' . $uid . '"
 
 This is a multi-part message in MIME format.
@@ -236,6 +236,9 @@ foo bar
 
         $e = new Message();
         $subject = 'foo bar';
+        $e->setSubject($subject);
+        $this->assertEquals($subject, $e->getSubject());
+        $subject = '';
         $e->setSubject($subject);
         $this->assertEquals($subject, $e->getSubject());
     }
